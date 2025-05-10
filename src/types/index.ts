@@ -1,13 +1,13 @@
-export type TaskStatus = 'todo' | 'inProgress' | 'done';
+export type TaskStatus = 'todo' | 'doing' | 'done';
 export type TaskPriority = 'low' | 'medium' | 'high';
 
 export interface Task {
   id: string;
   title: string;
-  description: string;
+  description?: string;
   status: TaskStatus;
   priority: TaskPriority;
-  createdAt: string;
+  createdAt: Date;
   updatedAt: string;
 }
 
@@ -29,4 +29,9 @@ export interface AppStats {
   tasksCompleted: number;
   pomodorosCompleted: number;
   totalFocusTime: number; // in minutes
+}
+
+export interface TaskProps {
+  task: Task;
+  onDragStart: (e: React.DragEvent<HTMLDivElement>) => void;
 }
