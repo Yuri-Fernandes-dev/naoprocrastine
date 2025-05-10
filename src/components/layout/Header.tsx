@@ -9,7 +9,7 @@ interface HeaderProps {
 }
 
 const Header: React.FC<HeaderProps> = ({ currentView, setCurrentView }) => {
-  const { t } = useTranslation();
+  const { i18n } = useTranslation();
 
   return (
     <header className="bg-white shadow-sm">

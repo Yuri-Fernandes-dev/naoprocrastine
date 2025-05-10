@@ -1,18 +1,19 @@
 import React from 'react';
 import Task from './Task';
-import { Column as ColumnType, Task as TaskType, TaskStatus } from '../../types';
+import { Column as ColumnType, TaskStatus } from '../../types';
 import { columnColors } from '../../utils/colors';
 import { useTaskContext } from '../../contexts/TaskContext';
 import { Trash2 } from 'lucide-react';
 
-interface ColumnProps {
+interface Props {
   column: ColumnType;
-  onDragStart: (taskId: string, sourceStatus: TaskStatus) => void;
-  onDragOver: (e: React.DragOverEvent) => void;
-  onDrop: () => void;
+  tasks: Task[];
+  onDragStart: (e: React.DragEvent<HTMLDivElement>, taskId: string) => void;
+  onDragOver: (e: React.DragEvent<HTMLDivElement>) => void;
+  onDrop: (e: React.DragEvent<HTMLDivElement>, status: TaskStatus) => void;
 }
 
-const Column: React.FC<ColumnProps> = ({ column, onDragStart, onDragOver, onDrop }) => {
+const Column: React.FC<Props> = ({ column, tasks, onDragStart, onDragOver, onDrop }) => {
   const { deleteCompletedTasks } = useTaskContext();
   const colorClasses = columnColors[column.id];
 
@@ -47,7 +48,7 @@ const Column: React.FC<ColumnProps> = ({ column, onDragStart, onDragOver, onDrop
               <Task 
                 key={task.id}
                 task={task}
-                onDragStart={() => onDragStart(task.id, task.status)}
+                onDragStart={(e) => onDragStart(e, task.id)}
               />
             ))}
           </div>
