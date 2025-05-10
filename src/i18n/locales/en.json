@@ -1,0 +1,33 @@
+{
+  "auth": {
+    "signIn": "Sign In",
+    "signUp": "Sign Up",
+    "email": "Email",
+    "password": "Password",
+    "confirmPassword": "Confirm Password",
+    "forgotPassword": "Forgot Password?",
+    "noAccount": "Don't have an account?",
+    "hasAccount": "Already have an account?"
+  },
+  "subscription": {
+    "title": "Subscription Plan",
+    "description": "Unlock all features with our premium plan",
+    "price": "R$ 10/month",
+    "features": {
+      "unlimited": "Unlimited tasks",
+      "analytics": "Advanced analytics",
+      "priority": "Priority support",
+      "backup": "Cloud backup"
+    },
+    "subscribe": "Subscribe Now",
+    "manage": "Manage Subscription"
+  },
+  "common": {
+    "language": "Language",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "create": "Create"
+  }
+}

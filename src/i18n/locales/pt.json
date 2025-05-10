@@ -1,0 +1,33 @@
+{
+  "auth": {
+    "signIn": "Entrar",
+    "signUp": "Cadastrar",
+    "email": "Email",
+    "password": "Senha",
+    "confirmPassword": "Confirmar Senha",
+    "forgotPassword": "Esqueceu a senha?",
+    "noAccount": "Não tem uma conta?",
+    "hasAccount": "Já tem uma conta?"
+  },
+  "subscription": {
+    "title": "Plano de Assinatura",
+    "description": "Desbloqueie todos os recursos com nosso plano premium",
+    "price": "R$ 10/mês",
+    "features": {
+      "unlimited": "Tarefas ilimitadas",
+      "analytics": "Análises avançadas",
+      "priority": "Suporte prioritário",
+      "backup": "Backup na nuvem"
+    },
+    "subscribe": "Assinar Agora",
+    "manage": "Gerenciar Assinatura"
+  },
+  "common": {
+    "language": "Idioma",
+    "save": "Salvar",
+    "cancel": "Cancelar",
+    "delete": "Deletar",
+    "edit": "Editar",
+    "create": "Criar"
+  }
+}
