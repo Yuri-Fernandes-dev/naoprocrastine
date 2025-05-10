@@ -61,6 +61,17 @@ app.delete('/api/tasks/:id', (req, res) => {
   }
 });
 
+app.delete('/api/tasks/completed/all', (req, res) => {
+  try {
+    console.log('Deleting all completed tasks');
+    database.deleteCompletedTasks();
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error deleting completed tasks:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // Rotas para estatísticas
 app.get('/api/stats', (req, res) => {
   try {
@@ -81,6 +92,30 @@ app.put('/api/stats', (req, res) => {
     res.json(stats);
   } catch (error) {
     console.error('Error updating stats:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.post('/api/stats/reset', (req, res) => {
+  try {
+    console.log('Resetting stats...');
+    database.resetStats();
+    const newStats = database.getStats();
+    res.json(newStats);
+  } catch (error) {
+    console.error('Error resetting stats:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.post('/api/stats/reset-pomodoro', (req, res) => {
+  try {
+    console.log('Resetting pomodoro stats...');
+    database.resetPomodoroStats();
+    const newStats = database.getStats();
+    res.json(newStats);
+  } catch (error) {
+    console.error('Error resetting pomodoro stats:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });

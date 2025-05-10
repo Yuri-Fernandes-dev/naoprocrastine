@@ -2,6 +2,8 @@ import React from 'react';
 import Task from './Task';
 import { Column as ColumnType, Task as TaskType, TaskStatus } from '../../types';
 import { columnColors } from '../../utils/colors';
+import { useTaskContext } from '../../contexts/TaskContext';
+import { Trash2 } from 'lucide-react';
 
 interface ColumnProps {
   column: ColumnType;
@@ -11,6 +13,7 @@ interface ColumnProps {
 }
 
 const Column: React.FC<ColumnProps> = ({ column, onDragStart, onDragOver, onDrop }) => {
+  const { deleteCompletedTasks } = useTaskContext();
   const colorClasses = columnColors[column.id];
 
   return (
@@ -22,6 +25,15 @@ const Column: React.FC<ColumnProps> = ({ column, onDragStart, onDragOver, onDrop
       <div className={`p-3 ${colorClasses.header} transition-colors`}>
         <h3 className="font-medium">{column.title}</h3>
         <div className="text-sm opacity-90">{column.tasks.length} task{column.tasks.length !== 1 ? 's' : ''}</div>
+        {column.id === 'done' && column.tasks.length > 0 && (
+          <button
+            onClick={deleteCompletedTasks}
+            className="text-white hover:text-red-200 transition-colors"
+            title="Limpar tarefas concluídas"
+          >
+            <Trash2 size={16} />
+          </button>
+        )}
       </div>
       
       <div className="flex-grow p-3 overflow-y-auto">

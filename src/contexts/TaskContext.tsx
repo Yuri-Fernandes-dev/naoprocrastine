@@ -13,9 +13,12 @@ interface TaskContextType {
   addTask: (task: Omit<Task, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
   updateTask: (task: Task) => Promise<void>;
   deleteTask: (taskId: string) => Promise<void>;
+  deleteCompletedTasks: () => Promise<void>;
   moveTask: (taskId: string, sourceStatus: TaskStatus, targetStatus: TaskStatus) => Promise<void>;
   incrementTaskCompleted: () => Promise<void>;
   refreshTasks: () => Promise<void>;
+  resetStats: () => Promise<void>;
+  resetPomodoroStats: () => Promise<void>;
 }
 
 const defaultColumns: Column[] = [
@@ -151,6 +154,22 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const deleteCompletedTasks = async () => {
+    try {
+      setIsLoading(true);
+      const response = await fetch(`${API_URL}/tasks/completed/all`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) throw new Error('Failed to delete completed tasks');
+      
+      await refreshTasks();
+    } catch (error) {
+      console.error('Error deleting completed tasks:', error);
+      throw error;
+    }
+  };
+
   const moveTask = async (taskId: string, sourceStatus: TaskStatus, targetStatus: TaskStatus) => {
     if (sourceStatus === targetStatus) return;
 
@@ -214,6 +233,42 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const resetStats = async () => {
+    try {
+      setIsLoading(true);
+      const response = await fetch(`${API_URL}/stats/reset`, {
+        method: 'POST',
+      });
+
+      if (!response.ok) throw new Error('Failed to reset stats');
+      const newStats = await response.json();
+      setStats(newStats);
+    } catch (error) {
+      console.error('Error resetting stats:', error);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const resetPomodoroStats = async () => {
+    try {
+      setIsLoading(true);
+      const response = await fetch(`${API_URL}/stats/reset-pomodoro`, {
+        method: 'POST',
+      });
+
+      if (!response.ok) throw new Error('Failed to reset pomodoro stats');
+      const newStats = await response.json();
+      setStats(newStats);
+    } catch (error) {
+      console.error('Error resetting pomodoro stats:', error);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const value = {
     columns,
     stats,
@@ -222,9 +277,12 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
     addTask,
     updateTask,
     deleteTask,
+    deleteCompletedTasks,
     moveTask,
     incrementTaskCompleted,
     refreshTasks,
+    resetStats,
+    resetPomodoroStats,
   };
 
   if (isLoading) {

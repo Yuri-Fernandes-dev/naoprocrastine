@@ -69,12 +69,26 @@ const statements = {
     WHERE id = @id
   `),
   deleteTask: db.prepare('DELETE FROM tasks WHERE id = ?'),
+  deleteCompletedTasks: db.prepare('DELETE FROM tasks WHERE status = ?'),
   getStats: db.prepare('SELECT * FROM stats WHERE id = 1'),
   updateStats: db.prepare(`
     UPDATE stats
     SET tasks_completed = @tasksCompleted,
         pomodoros_completed = @pomodorosCompleted,
         total_focus_time = @totalFocusTime
+    WHERE id = 1
+  `),
+  resetStats: db.prepare(`
+    UPDATE stats
+    SET tasks_completed = 0,
+        pomodoros_completed = 0,
+        total_focus_time = 0
+    WHERE id = 1
+  `),
+  resetPomodoroStats: db.prepare(`
+    UPDATE stats
+    SET pomodoros_completed = 0,
+        total_focus_time = 0
     WHERE id = 1
   `),
 };
@@ -148,6 +162,17 @@ export const database = {
     }
   },
 
+  deleteCompletedTasks(): void {
+    try {
+      console.log('Deleting completed tasks');
+      statements.deleteCompletedTasks.run('done');
+      console.log('Completed tasks deleted successfully');
+    } catch (error) {
+      console.error('Error deleting completed tasks:', error);
+      throw error;
+    }
+  },
+
   getStats(): AppStats {
     try {
       console.log('Getting stats...');
@@ -176,6 +201,28 @@ export const database = {
       console.log('Stats updated successfully');
     } catch (error) {
       console.error('Error updating stats:', error);
+      throw error;
+    }
+  },
+
+  resetStats(): void {
+    try {
+      console.log('Resetting stats...');
+      statements.resetStats.run();
+      console.log('Stats reset successfully');
+    } catch (error) {
+      console.error('Error resetting stats:', error);
+      throw error;
+    }
+  },
+
+  resetPomodoroStats(): void {
+    try {
+      console.log('Resetting pomodoro stats...');
+      statements.resetPomodoroStats.run();
+      console.log('Pomodoro stats reset successfully');
+    } catch (error) {
+      console.error('Error resetting pomodoro stats:', error);
       throw error;
     }
   },
