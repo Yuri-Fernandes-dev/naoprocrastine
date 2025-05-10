@@ -5,11 +5,11 @@ export const columnColors = {
     header: 'bg-blue-500 text-white',
     headerHover: 'hover:bg-blue-600',
   },
-  inProgress: {
-    bg: 'bg-purple-50',
-    border: 'border-purple-200',
-    header: 'bg-purple-500 text-white',
-    headerHover: 'hover:bg-purple-600',
+  doing: {
+    bg: 'bg-yellow-50',
+    border: 'border-yellow-200',
+    header: 'bg-yellow-500 text-white',
+    headerHover: 'hover:bg-yellow-600',
   },
   done: {
     bg: 'bg-green-50',

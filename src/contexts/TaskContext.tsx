@@ -2,8 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Task, TaskStatus, Column, AppStats } from '../types';
 import { columnColors } from '../utils/colors';
 import { generateId } from '../utils/helpers';
-
-const API_URL = 'http://localhost:3001/api';
+import { db } from '../db';
 
 interface TaskContextType {
   columns: Column[];
@@ -29,9 +28,9 @@ const defaultColumns: Column[] = [
     tasks: [],
   },
   {
-    id: 'inProgress',
+    id: 'doing',
     title: 'In Progress',
-    color: columnColors.inProgress.header,
+    color: columnColors.doing.header,
     tasks: [],
   },
   {
@@ -58,21 +57,17 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const refreshTasks = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch(`${API_URL}/tasks`);
-      if (!response.ok) throw new Error('Failed to fetch tasks');
-      const tasks = await response.json();
+      const tasks = await db.tasks.toArray();
+      const savedStats = await db.stats.toArray();
       
       const updatedColumns = defaultColumns.map(column => ({
         ...column,
-        tasks: tasks.filter((task: Task) => task.status === column.id),
+        tasks: tasks.filter(task => task.status === column.id),
       }));
       setColumns(updatedColumns);
 
-      const statsResponse = await fetch(`${API_URL}/stats`);
-      if (!statsResponse.ok) throw new Error('Failed to fetch stats');
-      const savedStats = await statsResponse.json();
-      if (savedStats) {
-        setStats(savedStats);
+      if (savedStats.length > 0) {
+        setStats(savedStats[0]);
       }
     } catch (error) {
       console.error('Error refreshing data:', error);
@@ -81,7 +76,6 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // Carregar dados iniciais
   useEffect(() => {
     refreshTasks();
   }, []);
@@ -92,20 +86,11 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const newTask: Task = {
         ...taskData,
         id: generateId(),
-        createdAt: new Date().toISOString(),
+        createdAt: new Date(),
         updatedAt: new Date().toISOString(),
       };
 
-      const response = await fetch(`${API_URL}/tasks`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(newTask),
-      });
-
-      if (!response.ok) throw new Error('Failed to add task');
-      
+      await db.tasks.add(newTask);
       await refreshTasks();
     } catch (error) {
       console.error('Error adding task:', error);
@@ -121,16 +106,7 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
         updatedAt: new Date().toISOString(),
       };
 
-      const response = await fetch(`${API_URL}/tasks/${taskToUpdate.id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(taskToUpdate),
-      });
-
-      if (!response.ok) throw new Error('Failed to update task');
-      
+      await db.tasks.put(taskToUpdate);
       await refreshTasks();
     } catch (error) {
       console.error('Error updating task:', error);
@@ -141,12 +117,7 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const deleteTask = async (taskId: string) => {
     try {
       setIsLoading(true);
-      const response = await fetch(`${API_URL}/tasks/${taskId}`, {
-        method: 'DELETE',
-      });
-
-      if (!response.ok) throw new Error('Failed to delete task');
-      
+      await db.tasks.delete(taskId);
       await refreshTasks();
     } catch (error) {
       console.error('Error deleting task:', error);
@@ -157,12 +128,7 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const deleteCompletedTasks = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch(`${API_URL}/tasks/completed/all`, {
-        method: 'DELETE',
-      });
-
-      if (!response.ok) throw new Error('Failed to delete completed tasks');
-      
+      await db.tasks.where('status').equals('done').delete();
       await refreshTasks();
     } catch (error) {
       console.error('Error deleting completed tasks:', error);
@@ -175,7 +141,7 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     try {
       setIsLoading(true);
-      const taskToMove = columns.find(col => col.id === sourceStatus)?.tasks.find(task => task.id === taskId);
+      const taskToMove = await db.tasks.get(taskId);
       if (!taskToMove) return;
 
       const updatedTask: Task = {
@@ -184,23 +150,8 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
         updatedAt: new Date().toISOString(),
       };
 
-      const response = await fetch(`${API_URL}/tasks/${taskId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(updatedTask),
-      });
-
-      if (!response.ok) throw new Error('Failed to move task');
-
-      // Atualizar o estado após mover a tarefa
+      await db.tasks.put(updatedTask);
       await refreshTasks();
-
-      // Se a tarefa foi movida para "done", incrementar o contador
-      if (targetStatus === 'done' && sourceStatus !== 'done') {
-        await incrementTaskCompleted();
-      }
     } catch (error) {
       console.error('Error moving task:', error);
       throw error;
@@ -209,63 +160,49 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const incrementTaskCompleted = async () => {
     try {
-      setIsLoading(true);
-      const newStats = {
-        ...stats,
-        tasksCompleted: stats.tasksCompleted + 1,
+      const currentStats = await db.stats.toArray();
+      const updatedStats = {
+        ...defaultStats,
+        ...currentStats[0],
+        tasksCompleted: (currentStats[0]?.tasksCompleted || 0) + 1,
       };
 
-      const response = await fetch(`${API_URL}/stats`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(newStats),
-      });
+      if (currentStats.length > 0) {
+        await db.stats.put(updatedStats, currentStats[0].id);
+      } else {
+        await db.stats.add(updatedStats);
+      }
 
-      if (!response.ok) throw new Error('Failed to update stats');
-      setStats(newStats);
+      setStats(updatedStats);
     } catch (error) {
-      console.error('Error updating stats:', error);
-      throw error;
-    } finally {
-      setIsLoading(false);
+      console.error('Error incrementing tasks completed:', error);
     }
   };
 
   const resetStats = async () => {
     try {
-      setIsLoading(true);
-      const response = await fetch(`${API_URL}/stats/reset`, {
-        method: 'POST',
-      });
-
-      if (!response.ok) throw new Error('Failed to reset stats');
-      const newStats = await response.json();
-      setStats(newStats);
+      await db.stats.clear();
+      await db.stats.add(defaultStats);
+      setStats(defaultStats);
     } catch (error) {
       console.error('Error resetting stats:', error);
-      throw error;
-    } finally {
-      setIsLoading(false);
     }
   };
 
   const resetPomodoroStats = async () => {
     try {
-      setIsLoading(true);
-      const response = await fetch(`${API_URL}/stats/reset-pomodoro`, {
-        method: 'POST',
-      });
-
-      if (!response.ok) throw new Error('Failed to reset pomodoro stats');
-      const newStats = await response.json();
-      setStats(newStats);
+      const currentStats = await db.stats.toArray();
+      if (currentStats.length > 0) {
+        const updatedStats = {
+          ...currentStats[0],
+          pomodorosCompleted: 0,
+          totalFocusTime: 0,
+        };
+        await db.stats.put(updatedStats, currentStats[0].id);
+        setStats(updatedStats);
+      }
     } catch (error) {
       console.error('Error resetting pomodoro stats:', error);
-      throw error;
-    } finally {
-      setIsLoading(false);
     }
   };
 

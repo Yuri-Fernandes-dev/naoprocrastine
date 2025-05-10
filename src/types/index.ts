@@ -26,6 +26,7 @@ export interface PomodoroSettings {
 }
 
 export interface AppStats {
+  id?: number;
   tasksCompleted: number;
   pomodorosCompleted: number;
   totalFocusTime: number; // in minutes
